@@ -67,7 +67,7 @@ class StartQuiz:
 
         # Reset label and entry box (for when users come back to home screen
         self.choose_label.config(fg="#009900", font=("Arial", "12", "bold"))
-        self.num_rounds_entry.config(bg="#fff")
+        self.num_rounds_entry.config(bg="#ffffff")
 
         error = "Please choose a whole number more than 0"
         has_errors = "no"
