@@ -246,7 +246,7 @@ class Play:
         # buttons (text | bg colour | command | row | column | fg colour)
         button_details_list = [
             [f"Next Round (0/0)", "#34A300", self.new_round, 0, 1, "#000"],
-            ["Instructions", "#E18B35", "", 0, 0, "#000"]
+            ["Instructions", "#E18B35", self.to_instr, 0, 0, "#000"]
         ]
 
         # List to hold buttons once they have been made
@@ -352,6 +352,76 @@ class Play:
         # Reshow root and end current quiz
         root.deiconify()
         self.play_box.destroy()
+
+    def to_instr(self):
+        """
+        Displays instructions for quiz
+        """
+        Instructions(self)
+
+class Instructions:
+
+    def __init__(self, partner):
+
+        # set up dialogue box and background color
+        background = "#ffe6cc"
+        self.instructions_box = Toplevel()
+
+        # disable buttons
+        partner.instructions_button.config(state=DISABLED)
+        partner.end_game_button.config(state=DISABLED)
+
+        # If users press 'X' instead of dismiss, unblocks instructions button
+        self.instructions_box.protocol('WM_DELETE_WINDOW',
+                               partial(self.close_instructions, partner))
+
+        self.instructions_frame = Frame(self.instructions_box, width=300,
+                                height=200)
+        self.instructions_frame.grid()
+
+        self.instructions_heading_label = Label(self.instructions_frame,
+                                        text="Instructions",
+                                        font=("Arial", 14, "bold"))
+        self.instructions_heading_label.grid(row=0)
+
+        instructions_text = "How to play:\n" \
+                    "Choose the number of questions\n"\
+                    "Enter how many quiz questions you want to answer (1–100) and click Play.\n\n" \
+                    "You will be asked either:\n" \
+                    "Which movie a quote is from, or\n" \
+                    "Which quote is from a specific movie\n\n" \
+                    "Choose the correct answer from the four options.\n" \
+                    "You'll see if your answer was correct.\n\n" \
+                    "Click 'Next Round'\n" \
+                    "Move on to the next question. The button will show how many questions you've done.\n\n" \
+                    "Click 'End Game'\n" \
+                    "You can end the quiz at any time by clicking the End Game button."
+
+        self.instructions_text_label = Label(self.instructions_frame,
+                                     text=instructions_text, wraplength=350,
+                                     justify="left")
+        self.instructions_text_label.grid(row=1, padx=10)
+
+        self.dismiss_button = Button(self.instructions_frame,
+                                     font=("Arial", 12, "bold"),
+                                     text="Dismiss", bg="#E18B35",
+                                     fg="#000",
+                                     command=partial(self.close_instructions, partner))
+        self.dismiss_button.grid(row=2, padx=10, pady=10)
+
+        # List of everything to put background colour on
+        recolour_list = (self.instructions_frame, self.instructions_heading_label,
+                         self.instructions_text_label)
+
+        for item in recolour_list:
+            item.config(bg=background)
+
+    def close_instructions(self, partner):
+        # Re-enable the buttons
+        partner.instructions_button.config(state=NORMAL)
+        partner.end_game_button.config(state=NORMAL)
+
+        self.instructions_box.destroy()
 
 
 # main routine
