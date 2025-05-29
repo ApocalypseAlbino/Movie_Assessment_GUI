@@ -49,7 +49,7 @@ def get_questions():
         del correct_quote[delete2]
         del correct_quote[delete1]
 
-        correct_ans = round_quotes[correct_num]
+        correct_ans = round_movies[correct_num]
         round_qm = round_movies
         question_qm = correct_quote[0]
         question = f'What movie is the quote "{question_qm}" from?'
@@ -128,6 +128,9 @@ class StartQuiz:
                                   command=self.check_rounds)
         self.play_button.grid(row=1)
 
+        # Bind enter to play button
+        root.bind('<Return>', lambda event: self.check_rounds())
+
     def check_rounds(self):
         """
         Checks users have entered 1 or more rounds
@@ -184,6 +187,8 @@ class Play:
         self.rounds_played = IntVar()
         self.rounds_played.set(0)
 
+        self.rounds_won = IntVar()
+
         self.play_box = Toplevel()
 
         # If users press the 'x' on the game window, end the entire game!
@@ -192,31 +197,40 @@ class Play:
         self.game_frame = Frame(self.play_box)
         self.game_frame.grid(padx=10, pady=10)
 
-        self.heading_label = Label(self.game_frame, text="Question",
+        # Frame so question and winrate are side by side
+        self.heading_frame = Frame(self.game_frame)
+        self.heading_frame.grid(row=0)
+
+        self.heading_label = Label(self.heading_frame, text="Question",
                                    font=("Arial", 16, "bold"),
-                                   wraplength=450)
-        self.heading_label.grid(row=0, pady=10)
+                                   wraplength=375)
+        self.heading_label.grid(row=0, column=0, pady=10)
 
-        # Colour buttons
-        self.colour_frame = Frame(self.game_frame)
-        self.colour_frame.grid(row=3)
+        self.winrate_label = Label(self.heading_frame, text=f"Score: 0/{how_many}",
+                                   font=("Arial", 12, "bold"))
+        self.winrate_label.grid(row=0, column=2, padx=15)
 
-        # answer buttons (command | row | column)
+        # Frame for answer buttons
+        self.answer_frame = Frame(self.game_frame)
+        self.answer_frame.grid(row=3)
+
+        # details for the answer buttons (text | row | column | ID)
         answer_details_list = [
-            ["", 0, 0],
-            ["", 0, 1],
-            ["", 1, 0],
-            ["", 1, 1]
+            ["Answer", 0, 0, 0],
+            ["Answer", 0, 1, 1],
+            ["Answer", 1, 0, 2],
+            ["Answer", 1, 1, 3]
         ]
 
         # List to hold buttons once they have been made
         self.answer_ref_list = []
 
         for item in answer_details_list:
-            self.make_button = Button(self.colour_frame,
-                                      text="Answer", bg="#4D9EC7",
+            self.make_button = Button(self.answer_frame,
+                                      text=item[1], bg="#4D9EC7",
                                       fg="#000", font=("Arial", 12, "bold"),
-                                      width=22, height=4, wraplength="200", command=item[0])
+                                      width=22, height=4, wraplength="200",
+                                      command=partial(self.round_results, item[3]))
             self.make_button.grid(row=item[1], column=item[2], padx=5, pady=5)
 
             self.answer_ref_list.append(self.make_button)
@@ -225,13 +239,13 @@ class Play:
                                   font=("Arial", 12), bg="#b4daa9")
         self.result_label.grid(row=4, pady=10)
 
-        # Other buttons
+        # Frame for next round and instruction buttons
         self.button_frame = Frame(self.game_frame)
         self.button_frame.grid(row=6)
 
         # buttons (text | bg colour | command | row | column | fg colour)
         button_details_list = [
-            [f"Next Round (0/{how_many})", "#34A300", self.new_round, 0, 1, "#000"],
+            [f"Next Round (0/0)", "#34A300", self.new_round, 0, 1, "#000"],
             ["Instructions", "#E0DD00", "", 0, 0, "#000"]
         ]
 
@@ -287,9 +301,52 @@ class Play:
             self.next_round_button.config(text=f"Next round ({rounds_played}/{rounds_wanted})")
 
         for count, item in enumerate(self.answer_ref_list):
-            item.config(text=round_qm[count], state=NORMAL)
+            item.config(text=round_qm[count], state=NORMAL, bg="#4D9EC7")
 
-        # self.next_round_button.config(state=DISABLED)
+        self.next_round_button.config(state=DISABLED)
+
+    def round_results(self, user_choice):
+        """
+        Retrieves which button was pushed, checks whether
+        it is correct or not, and displays such
+        """
+
+        # Retrieve text from button pressed
+        which_ans = self.answer_ref_list[user_choice].cget('text')
+
+        # Retrieve rounds wanted/played
+        rounds_played = self.rounds_played.get()
+        rounds_wanted = self.rounds_wanted.get()
+
+        # Re-enable next round button if not last round
+        if rounds_played != rounds_wanted:
+            self.next_round_button.config(state=NORMAL)
+
+        # Edit tag to say whether user was right or wrong and add score to winrate if correct
+        if which_ans == self.correct_ans:
+            result_text = f"Congrats! That was the correct answer!"
+            result_bg = "#82b366"
+
+            rounds_won = self.rounds_won.get()
+            rounds_won += 1
+            self.rounds_won.set(rounds_won)
+            self.winrate_label.config(text=f"Score: {rounds_won}/{rounds_wanted}")
+
+        else:
+            result_text = f"Eesh. That was incorrect, sorry"
+            result_bg = "#f8cecc"
+
+        self.result_label.config(text=result_text, bg=result_bg)
+
+
+        # Disable answer buttons and colour correct answers green and wrong answers red
+        for count, item in enumerate(self.answer_ref_list):
+            item.config(state=DISABLED)
+            text = item.cget("text")
+            if text == self.correct_ans:
+                item.config(bg="#1eb333", disabledforeground="#000")
+            else:
+                item.config(bg="#e42723", disabledforeground="#000")
 
     def close_play(self):
         # Reshow root and end current quiz
