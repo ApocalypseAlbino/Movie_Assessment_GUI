@@ -371,7 +371,7 @@ class Instructions:
         partner.instructions_button.config(state=DISABLED)
         partner.end_game_button.config(state=DISABLED)
 
-        # If users press 'X' instead of dismiss, unblocks instructions button
+        # If users press 'X' instead of dismiss, do the same thing
         self.instructions_box.protocol('WM_DELETE_WINDOW',
                                partial(self.close_instructions, partner))
 
