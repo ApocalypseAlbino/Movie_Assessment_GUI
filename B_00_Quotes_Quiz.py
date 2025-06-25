@@ -345,8 +345,10 @@ class Play:
             text = item.cget("text")
             if text == self.correct_ans:
                 item.config(bg="#1eb333", disabledforeground="#000")
-            else:
+            elif text == which_ans and text != self.correct_ans:
                 item.config(bg="#e42723", disabledforeground="#000")
+            else:
+                item.config(bg="#b2aead", disabledforeground="#000")
 
     def close_play(self):
         # Reshow root and end current quiz
